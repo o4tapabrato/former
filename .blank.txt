@@ -1,20 +1,37 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db'; // Your prisma client file
+import { User, Prisma } from '@prisma/client';
 
-// Extend the global type to prevent TypeScript errors during hot-reloading in development
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+export async function POST(request: Request) {
+  try {
+    // 1. Explicitly type your request body using Prisma's input type
+    const body: Prisma.UserCreateInput = await request.json();
 
-// 1. Create a pool using the connection string from .env
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+    // 2. Perform validation (e.g., check if email/password exist)
+    if (!body.email || !body.password) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
 
-// 2. Pass the adapter to the constructor
-const adapter = new PrismaPg(pool);
+    // 3. Create the user - db.user.create automatically expects a Prisma.UserCreateInput 
+    // and returns a strictly-typed User object
+    const newUser: User = await db.user.create({
+      data: {
+        email: body.email,
+        password: body.password, // Make sure to hash this securely with bcrypt/argon2 in production!
+        name: body.name,
+      },
+    });
 
-export const db = globalForPrisma.prisma || new PrismaClient({ adapter });
+    // Exclude password before sending response back
+    const { password, ...userWithoutPassword } = newUser;
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db;
+    return NextResponse.json({ 
+      message: 'User created successfully', 
+      user: userWithoutPassword 
+    }, { status: 201 });
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
