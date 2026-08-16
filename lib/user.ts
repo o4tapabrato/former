@@ -1,5 +1,7 @@
 import { db } from "./prisma";
 import { User, Prisma } from "@prisma/client";
+import bcrypt from "bcrypt";
+import { hash } from "crypto";
 
 export async function createNewUser(user: any): Promise<User> {
     try {
@@ -7,10 +9,13 @@ export async function createNewUser(user: any): Promise<User> {
             throw new Error("Missing required fields !!!");
         }
 
+        const saltRounds = 10;
+        const hashedPassword: string = await bcrypt.hash(user.password, saltRounds)
+
         const newUser = db.user.create({
             data: {
                 email: user.email,
-                password: user.password,
+                password: hashedPassword,
                 username: user.username
             }
         })
@@ -56,6 +61,16 @@ export async function deleteUser(username: string): Promise<User|null> {
             where: { username }
         })
         return deletedUser;
+    }
+    catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+export async function matchUserPassword(inputPassword: string, userPassword: string): Promise<boolean> {
+    try {
+        return await bcrypt.compare(inputPassword, userPassword);
     }
     catch (error) {
         console.log(error);
