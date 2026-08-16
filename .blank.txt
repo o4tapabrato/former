@@ -1,37 +1,9 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db'; // Your prisma client file
-import { User, Prisma } from '@prisma/client';
+import { db } from "@/lib/db";
+import { Prisma, User } from "@prisma/client";
 
-export async function POST(request: Request) {
-  try {
-    // 1. Explicitly type your request body using Prisma's input type
-    const body: Prisma.UserCreateInput = await request.json();
-
-    // 2. Perform validation (e.g., check if email/password exist)
-    if (!body.email || !body.password) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // 3. Create the user - db.user.create automatically expects a Prisma.UserCreateInput 
-    // and returns a strictly-typed User object
-    const newUser: User = await db.user.create({
-      data: {
-        email: body.email,
-        password: body.password, // Make sure to hash this securely with bcrypt/argon2 in production!
-        name: body.name,
-      },
-    });
-
-    // Exclude password before sending response back
-    const { password, ...userWithoutPassword } = newUser;
-
-    return NextResponse.json({ 
-      message: 'User created successfully', 
-      user: userWithoutPassword 
-    }, { status: 201 });
-
-  } catch (error) {
-    console.error('Signup error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+export async function updateUser(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+  return await db.user.update({
+    where: { id },
+    data,
+  });
 }

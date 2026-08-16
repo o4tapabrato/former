@@ -1,28 +1,29 @@
 import { NextResponse } from "next/server";
-import { db } from '@/lib/prisma';
 import { User, Prisma } from '@prisma/client';
+import { createNewUser } from "@/lib/user";
 
 export async function POST(request: Request) {
     try {
         const body: Prisma.UserCreateInput = await request.json();
 
-        if (!body.email || !body.pasword || !body.username) {
+        if (!body.email || !body.password || !body.username) {
             return NextResponse.json(
                 { error: "Missing required argumebts !!!" },
                 { status: 400 }
             )
         }
 
-        const newUser: User = await db.user.create({
-            data: {
-                email: body.email,
-                password: body.pasword,
-                username: body.username,
-            }
-        })
+        const newUser = await createNewUser(body);
+
+        if(!newUser) {
+            return NextResponse.json(
+                { error: "Unable to create new user" },
+                { status: 400 }
+            )
+        }
 
         return NextResponse.json(
-            { message: "user created successfully" },
+            { message: "user created successfully", data: newUser },
             { status: 201 }
         )
 
