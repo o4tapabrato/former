@@ -17,29 +17,30 @@ model User {
   surveys   Survey[]
 }
 
-// Flexible Document Model for Surveys & Dynamic Questions
 model Survey {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  userId      String     @db.ObjectId
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Storing questions as an embedded JSON structure/array 
-  // This allows infinite flexibility for any question type without complex table joins
-  questions   Question[] 
+  // Store only the references/IDs pointing to the Question collection
+  questionIds String[] @db.ObjectId
 }
 
-// Embedded type for questions (No separate table needed)
-type Question {
-  id          String       @default(uuid())
+model Question {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
   type        QuestionType
   text        String
   order       Int          @default(0)
-  options     String[]     // Simple array of strings for options (e.g., ["Python", "R", "Julia", "SQL"])
+  options     String[]     
   required    Boolean      @default(false)
+  imageUrl    String?      
+  maxRating   Int?         
+  
+  surveyId    String       @db.ObjectId
 }
 
 enum QuestionType {
