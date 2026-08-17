@@ -4,11 +4,11 @@ import { cookies } from "next/headers";
 const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET)
 
 export interface SessionPayload extends JWTPayload {
-  userId: string;
+  id: string;
 }
 
 export async function createSession(userId: string): Promise<void> {
-    const token = await new SignJWT({ userId })
+    const token = await new SignJWT({ id: userId })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('3d')
@@ -44,7 +44,7 @@ export async function getSession(): Promise<SessionPayload | null> {
 
 export async function getCurrentUser(): Promise<string | null> {
     const session = await getSession();
-    return session?.userId || null;
+    return session?.id || null;
 }
 
 export async function destroySession(): Promise<void> {

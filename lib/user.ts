@@ -77,3 +77,15 @@ export async function matchUserPassword(inputPassword: string, userPassword: str
         throw error;
     }
 }
+
+export async function getUserDataFromId(id: string): Promise<User | null> {
+    try {
+        const user = await db.user.findFirst({
+            where: { id }
+        });
+        return user;
+    }
+    catch (error) {
+        throw error;
+    }
+}
