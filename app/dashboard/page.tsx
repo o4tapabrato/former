@@ -1,157 +1,124 @@
-'use client';
+import Link from "next/link";
+import { db } from "@/lib/prisma";
+import { PlusCircle, Image as ImageIcon, Star, ListOrdered, FileText, GraduationCap } from "lucide-react";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { User, LayoutGrid, LogOut, ShieldCheck, Mail, Calendar, UserCheck } from 'lucide-react';
-
-export default function DashboardPage() {
-    const router = useRouter();
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        async function fetchUserData() {
-            try {
-                const response = await fetch("/api/dashboard");
-                
-                if (!response.ok) {
-                    router.push('/login');
-                    return;
-                }
-
-                const data = await response.json();
-                console.log(data);
-                setUser(data);
-            } catch (error) {
-                console.error("Failed to fetch user:", error);
-                router.push('/login');
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchUserData();
-    }, [router]);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
-                <p className="text-slate-400 animate-pulse">Loading dashboard...</p>
-            </div>
-        );
-    }
-
-    if (!user) return null;
+export default async function DashboardPage() {
+    // Fetch existing surveys for this user if needed
+    // const surveys = await db.survey.findMany({ ... });
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col justify-between selection:bg-sky-500 selection:text-white">
-            {/* Header / Navbar */}
-            <header className="w-full max-w-7xl mx-auto px-6 h-24 flex items-center justify-between border-b border-slate-800/80 backdrop-blur-md">
-                <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 shadow-lg shadow-sky-600/30">
-                        <LayoutGrid className="w-5 h-5 text-white" />
+        <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+            <div className="max-w-6xl mx-auto space-y-8">
+
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-extrabold tracking-tight">Your Dashboard</h1>
+                        <p className="text-slate-400">Create, manage, and design rich multi-type surveys.</p>
                     </div>
-                    <span className="text-xl font-bold tracking-tight">
-                        Survey<span className="text-sky-400">Craft</span>
-                    </span>
+                    <Link
+                        href="/survey/new"
+                        className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white px-5 py-3 rounded-2xl font-semibold transition shadow-lg shadow-sky-600/20"
+                    >
+                        <PlusCircle className="w-5 h-5" />
+                        Create Blank Survey
+                    </Link>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Active Session</span>
+                {/* Survey Creation Options Grid */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-200">Start a New Survey</h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                        {/* Option 1: Standard Multi-Choice / Mixed Survey */}
+                        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between group">
+                            <div>
+                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                                    <ListOrdered className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">Standard Survey</h3>
+                                <p className="text-slate-400 text-sm mb-6">
+                                    Build custom surveys mixing multiple-choice, text inputs, checkboxes, and drop-downs.
+                                </p>
+                            </div>
+                            <Link
+                                href="/survey/new?type=standard"
+                                className="inline-flex items-center text-sm font-semibold text-indigo-400 hover:text-indigo-300"
+                            >
+                                Get Started &rarr;
+                            </Link>
+                        </div>
+
+                        {/* Option 2: Visual / Image-Based Survey */}
+                        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between group">
+                            <div>
+                                <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                                    <ImageIcon className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">Visual & Media Survey</h3>
+                                <p className="text-slate-400 text-sm mb-6">
+                                    Include high-resolution diagrams, product mockups, or photos directly inside your questions.
+                                </p>
+                            </div>
+                            <Link
+                                href="/survey/new?type=visual"
+                                className="inline-flex items-center text-sm font-semibold text-sky-400 hover:text-sky-300"
+                            >
+                                Get Started &rarr;
+                            </Link>
+                        </div>
+
+                        {/* Option 3: Rating & Feedback Survey */}
+                        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between group">
+                            <div>
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                                    <Star className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">Rating & Feedback</h3>
+                                <p className="text-slate-400 text-sm mb-6">
+                                    Gather precise star ratings, scale preferences, and qualitative reviews from your target audience.
+                                </p>
+                            </div>
+                            <Link
+                                href="/survey/new?type=rating"
+                                className="inline-flex items-center text-sm font-semibold text-amber-400 hover:text-amber-300"
+                            >
+                                Get Started &rarr;
+                            </Link>
+                        </div>
+                        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between group">
+                    <div>
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                            <GraduationCap className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2">Timed Online Test / Quiz</h3>
+                        <p className="text-slate-400 text-sm mb-6">
+                            Build graded exams with point values, correct answer keys, automatic scoring, and countdown timers.
+                        </p>
                     </div>
-                    <form action="/api/auth/signout" method="GET">
-                        <button 
-                            type="submit"
-                            className="text-sm font-medium text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-xl backdrop-blur-md"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            <span>Sign Out</span>
-                        </button>
-                    </form>
+                    <Link
+                        href="/survey/new?mode=quiz"
+                        className="inline-flex items-center text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                    >
+                        Create Test &rarr;
+                    </Link>
                 </div>
-            </header>
 
-            {/* Main Content Dashboard */}
-            <main className="max-w-4xl mx-auto w-full px-6 py-12 flex-1">
-                <div className="mb-10">
-                    <h1 className="text-3xl font-extrabold tracking-tight mb-2">Dashboard</h1>
-                    <p className="text-slate-400 text-sm">Welcome back! Here are your account profile details.</p>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-3 mb-10">
-                    <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-2xl border border-slate-800/80 shadow-xl flex items-center gap-4">
-                        <div className="p-3 bg-sky-500/10 text-sky-400 rounded-xl border border-sky-500/20">
-                            <User className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-slate-400 font-medium">Username</p>
-                            <p className="text-lg font-bold text-white">{user.username}</p>
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-2xl border border-slate-800/80 shadow-xl flex items-center gap-4">
-                        <div className="p-3 bg-sky-500/10 text-sky-400 rounded-xl border border-sky-500/20">
-                            <Mail className="w-6 h-6" />
-                        </div>
-                        <div className="overflow-hidden">
-                            <p className="text-xs text-slate-400 font-medium">Email Address</p>
-                            <p className="text-sm font-bold text-white truncate">{user.email}</p>
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-2xl border border-slate-800/80 shadow-xl flex items-center gap-4">
-                        <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
-                            <ShieldCheck className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-slate-400 font-medium">Account Status</p>
-                            <p className="text-lg font-bold text-emerald-400">Verified</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Detailed Info Card */}
-                <div className="bg-slate-900/40 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-8 shadow-2xl">
-                    <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                        <UserCheck className="w-5 h-5 text-sky-400" />
-                        <span>Profile Information</span>
-                    </h3>
-
-                    <div className="divide-y divide-slate-800/80 text-sm">
-                        <div className="py-4 flex justify-between items-center">
-                            <span className="text-slate-400">User ID</span>
-                            <span className="font-mono text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-300">{user.id}</span>
-                        </div>
-                        <div className="py-4 flex justify-between items-center">
-                            <span className="text-slate-400">Username</span>
-                            <span className="font-medium text-white">{user.username}</span>
-                        </div>
-                        <div className="py-4 flex justify-between items-center">
-                            <span className="text-slate-400">Email</span>
-                            <span className="font-medium text-white">{user.email}</span>
-                        </div>
-                        <div className="py-4 flex justify-between items-center">
-                            <span className="text-slate-400 flex items-center gap-1.5">
-                                <Calendar className="w-4 h-4" /> Member Since
-                            </span>
-                            <span className="font-medium text-white">
-                                {new Date(user.createdAt).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                })}
-                            </span>
-                        </div>
                     </div>
                 </div>
-            </main>
+                
 
-            {/* Footer */}
-            <footer className="py-6 text-center text-slate-500 text-xs border-t border-slate-800/40">
-                &copy; 2026 SurveyCraft. All rights reserved.
-            </footer>
+                {/* Recent Surveys Section */}
+                <div className="space-y-4 pt-6">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-200">Your Recent Surveys</h2>
+                    <div className="p-8 rounded-3xl bg-slate-950 border border-slate-900 text-center text-slate-500">
+                        <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                        <p>You haven't created any surveys yet. Click an option above to build your first one!</p>
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 }
