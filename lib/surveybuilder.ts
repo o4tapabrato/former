@@ -1,12 +1,12 @@
-import { db } from "@/lib/db";
+import { db } from "./prisma";
 
 export async function createSurvey(survey: any) {
     try {
-        if (!survey.title) {
-            throw new Error("Missing required fields !!!");
+        if(!survey.title) {
+            throw new Error
+            ("Missing required fields !!!");
         }
 
-        // Prisma automatically assigns the generated survey.id to each question's surveyId field
         const newSurvey = await db.survey.create({
             data: {
                 title: survey.title,
@@ -22,16 +22,16 @@ export async function createSurvey(survey: any) {
                         imageUrl: q.imageUrl || null,
                         maxRating: q.maxRating || null
                     })),
-                },
+                }
             },
             include: {
-                questions: true // Instantly returns the created questions mapped to the survey
+                questions: true
             }
         });
-
         return newSurvey;
-    } catch (error) {
-        console.error("Database error in createSurvey:", error);
+    }
+    catch (error) {
+        console.error("Database Error !!!");
         throw error;
     }
 }

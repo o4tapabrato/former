@@ -39,7 +39,7 @@ export default async function DashboardPage() {
                 </p>
               </div>
               <Link
-                href="/survey/new?type=survey"
+                href="/create-survey"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-sky-400 hover:text-sky-300"
               >
                 Create Survey &rarr;
