@@ -22,9 +22,14 @@ export async function getSurveybyId(surveyId: string) {
 
 export async function getSurveyByUserId(userId: string) {
     try {
+        const currentDate = new Date();
         const surveys = await db.survey.findMany({
             where: {
-                userId: userId
+                userId: userId,
+                OR: [
+                    { expiresAt: null },
+                    { expiresAt: { gt: currentDate } }
+                ]
             },
             orderBy: {
                 createdAt: 'desc'

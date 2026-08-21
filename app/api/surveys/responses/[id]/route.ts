@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSurveybyId } from "@/lib/survey";
 import { createResponse } from "@/lib/surveyResponse";
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> | { id: string }}) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
     try {
         const resolvedParams = await params;
         const surveyId = resolvedParams?.id;
@@ -10,7 +10,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const body = await request.json();
         const { answers } = body;
 
-        if(!answers) {
+        if (!answers) {
             return NextResponse.json(
                 { error: "No answers are provided !!!" },
                 { status: 400 }
@@ -19,10 +19,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
         const survey = await getSurveybyId(surveyId);
 
-        if(!survey) {
+        if (!survey) {
             return NextResponse.json(
                 { error: "Survey not found !!!" },
                 { status: 404 }
+            );
+        }
+
+        if (survey.expiresAt && new Date() > new Date(survey.expiresAt)) {
+            return NextResponse.json(
+                { error: "This survey has expired and is no longer accepting responses." },
+                { status: 403 }
             );
         }
 

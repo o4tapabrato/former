@@ -18,9 +18,14 @@ export async function POST(request: Request) {
         const user = await getUserDataFromId(id);
 
         const body = await request.json();
-        body.userId = id;
-        body.user = user;
-        const newSurvey = await createSurvey(body);
+        const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
+        const surveyData = {
+            ...body,
+            userId: id,
+            user: user,
+            expiresAt: expiresAt, // Overwrite with the verified Date object
+        };
+        const newSurvey = await createSurvey(surveyData);
         return NextResponse.json(
             { success: true, message: "Survey created successfully !!!" },
             { status: 201 }

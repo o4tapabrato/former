@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ListOrdered, 
@@ -8,8 +8,9 @@ import {
   AlignLeft, 
   Star, 
   Image as ImageIcon, 
+  Plus, 
   Save,
-  BookmarkPlus
+  Calendar
 } from "lucide-react";
 import QuestionCard from "../components/builder/QuestionCard";
 
@@ -23,33 +24,14 @@ interface BuilderQuestion {
   maxRating?: number;
 }
 
-export default function SurveyBuilderPage() {
+export default function NewSurveyPage() {
   const router = useRouter();
-  const [title, setTitle] = useState("Untitled Survey");
+  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [expiresAt, setExpiresAt] = useState(""); // <-- Added state for expiration
   const [questions, setQuestions] = useState<BuilderQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
 
-  // Track unsaved modifications
-  useEffect(() => {
-    setIsDirty(true);
-  }, [title, description, questions]);
-
-  // Browser close / tab refresh warning
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
-
-  // Add question template based on type
   const addQuestionTemplate = (type: BuilderQuestion["type"]) => {
     const newQuestion: BuilderQuestion = {
       id: crypto.randomUUID(),
@@ -106,20 +88,34 @@ export default function SurveyBuilderPage() {
     );
   };
 
-  const handleSaveSurvey = async (isDraft = false) => {
+  const handleSaveSurvey = async () => {
+    if (!title.trim()) {
+      alert("Please enter a survey title.");
+      return;
+    }
+
+    if (questions.length === 0) {
+      alert("Please add at least one question to your survey.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/surveys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, questions, isDraft }),
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+          questions 
+        }),
       });
 
       if (response.ok) {
-        setIsDirty(false);
         router.push("/dashboard");
       } else {
-        alert("Failed to save survey");
+        alert("Failed to create survey.");
       }
     } catch (error) {
       console.error(error);
@@ -133,10 +129,9 @@ export default function SurveyBuilderPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* SECTION 1: Questions List & Live Preview */}
+        {/* Main Form Builder Area */}
         <div className="lg:col-span-2 space-y-6">
-          
-          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4">
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4 shadow-xl">
             <input 
               type="text" 
               value={title} 
@@ -151,121 +146,85 @@ export default function SurveyBuilderPage() {
               placeholder="Survey description (optional)..."
               rows={2}
             />
+
+            {/* Expiration Date Picker Section */}
+            <div className="pt-4 border-t border-slate-800/80 space-y-2">
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-sky-400" />
+                Expiration Date & Time (Optional)
+              </label>
+              <input 
+                type="datetime-local"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500"
+              />
+              <p className="text-[11px] text-slate-500">If set, respondents will not be able to submit answers after this deadline.</p>
+            </div>
           </div>
 
-          {questions.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl border border-dashed border-slate-800 text-slate-500">
-              <p>No questions added yet. Select a question type from the options panel to begin building.</p>
-            </div>
-          ) : (
-            questions.map((q, index) => (
-              <QuestionCard
-                key={q.id}
-                question={q}
-                index={index}
-                onUpdate={updateQuestion}
-                onRemove={removeQuestion}
-                onAddOption={addOption}
-                onUpdateOption={updateOptionText}
-                onRemoveOption={removeOption}
-              />
-            ))
-          )}
+          {questions.map((q, index) => (
+            <QuestionCard
+              key={q.id}
+              question={q}
+              index={index}
+              onUpdate={updateQuestion}
+              onRemove={removeQuestion}
+              onAddOption={addOption}
+              onUpdateOption={updateOptionText}
+              onRemoveOption={removeOption}
+            />
+          ))}
 
-          {questions.length > 0 && (
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => handleSaveSurvey(true)}
-                disabled={isSubmitting}
-                className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold rounded-2xl transition flex items-center justify-center gap-2"
-              >
-                <BookmarkPlus className="w-5 h-5 text-slate-400" />
-                Save as Draft
-              </button>
-
-              <button
-                onClick={() => handleSaveSurvey(false)}
-                disabled={isSubmitting}
-                className="flex-1 py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20"
-              >
-                <Save className="w-5 h-5" />
-                {isSubmitting ? "Saving..." : "Publish Survey"}
-              </button>
-            </div>
-          )}
-
+          <button
+            onClick={handleSaveSurvey}
+            disabled={isSubmitting}
+            className="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20"
+          >
+            <Save className="w-5 h-5" />
+            {isSubmitting ? "Saving Survey..." : "Publish Survey"}
+          </button>
         </div>
 
-        {/* SECTION 2: Question Type Palette Sidebar */}
+        {/* Sidebar Question Palette */}
         <div className="space-y-4">
-          <div className="sticky top-24 p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4">
+          <div className="sticky top-24 p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4 shadow-xl">
             <h3 className="text-lg font-bold text-white tracking-tight">Question Types</h3>
-            <p className="text-xs text-slate-400">Click any option to append a template to your survey.</p>
-
             <div className="space-y-2.5">
               <button
                 onClick={() => addQuestionTemplate("MULTIPLE_CHOICE")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 transition text-left group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
               >
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-105 transition">
-                  <ListOrdered className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Multiple Choice</p>
-                  <p className="text-xs text-slate-400">Select one option from a list</p>
-                </div>
+                <ListOrdered className="w-5 h-5 text-indigo-400" />
+                <span className="text-sm font-semibold text-white">Multiple Choice</span>
               </button>
-
               <button
                 onClick={() => addQuestionTemplate("CHECKBOX")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 transition text-left group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
               >
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
-                  <CheckSquare className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Checkboxes</p>
-                  <p className="text-xs text-slate-400">Select multiple choices</p>
-                </div>
+                <CheckSquare className="w-5 h-5 text-emerald-400" />
+                <span className="text-sm font-semibold text-white">Checkboxes</span>
               </button>
-
               <button
                 onClick={() => addQuestionTemplate("TEXT")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 transition text-left group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
               >
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-105 transition">
-                  <AlignLeft className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Open Text</p>
-                  <p className="text-xs text-slate-400">Short or long qualitative response</p>
-                </div>
+                <AlignLeft className="w-5 h-5 text-amber-400" />
+                <span className="text-sm font-semibold text-white">Open Text</span>
               </button>
-
               <button
                 onClick={() => addQuestionTemplate("RATING")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 transition text-left group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
               >
-                <div className="w-9 h-9 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center group-hover:scale-105 transition">
-                  <Star className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Rating Scale</p>
-                  <p className="text-xs text-slate-400">Numerical or star scale rating</p>
-                </div>
+                <Star className="w-5 h-5 text-yellow-400" />
+                <span className="text-sm font-semibold text-white">Rating Scale</span>
               </button>
-
               <button
                 onClick={() => addQuestionTemplate("IMAGE_CHOICE")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 transition text-left group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
               >
-                <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center group-hover:scale-105 transition">
-                  <ImageIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Visual Choice</p>
-                  <p className="text-xs text-slate-400">Question accompanied by an image</p>
-                </div>
+                <ImageIcon className="w-5 h-5 text-sky-400" />
+                <span className="text-sm font-semibold text-white">Visual Choice</span>
               </button>
             </div>
           </div>

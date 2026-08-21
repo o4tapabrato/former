@@ -7,11 +7,14 @@ export async function createSurvey(survey: any) {
             ("Missing required fields !!!");
         }
 
+        const expiresAt = survey.expiresAt ? new Date(survey.expiresAt) : null;
+
         const newSurvey = await db.survey.create({
             data: {
                 title: survey.title,
                 description: survey.description || "",
                 userId: survey.userId,
+                expiresAt: expiresAt,
                 questions: {
                     create: (survey.questions || []).map((q: any, index: number) => ({
                         type: q.type,

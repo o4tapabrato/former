@@ -53,7 +53,7 @@ export default function DashboardPage() {
             <p className="text-slate-400 text-sm mt-1">Manage your surveys and share links to collect responses.</p>
           </div>
           <Link
-            href="/survey/new"
+            href="/create-survey"
             className="px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-2xl transition flex items-center gap-2 shadow-lg shadow-sky-600/20"
           >
             <Plus className="w-5 h-5" />
