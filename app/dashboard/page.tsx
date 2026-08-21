@@ -1,80 +1,129 @@
-import Link from "next/link";
-import { PlusCircle, FileText, GraduationCap } from "lucide-react";
+"use client";
 
-export default async function DashboardPage() {
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Plus, Copy, Check, ExternalLink, ClipboardList } from "lucide-react";
+
+interface Survey {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+}
+
+export default function DashboardPage() {
+  const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Fetch user surveys on mount
+  useEffect(() => {
+    async function fetchUserSurveys() {
+      try {
+        const res = await fetch("/api/surveys");
+        if (res.ok) {
+          const data = await res.json();
+          setSurveys(data.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch surveys:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUserSurveys();
+  }, []);
+
+  const handleCopyLink = (surveyId: string) => {
+    const link = `${window.location.origin}/survey/${surveyId}`;
+    navigator.clipboard.writeText(link);
+    setCopiedId(surveyId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10 space-y-10">
       <div className="max-w-5xl mx-auto space-y-8">
         
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        {/* Dashboard Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Your Dashboard</h1>
-            <p className="text-slate-400">Create and manage your surveys and online tests.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">Your Dashboard</h1>
+            <p className="text-slate-400 text-sm mt-1">Manage your surveys and share links to collect responses.</p>
           </div>
           <Link
             href="/survey/new"
-            className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white px-5 py-3 rounded-2xl font-semibold transition shadow-lg shadow-sky-600/20"
+            className="px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-2xl transition flex items-center gap-2 shadow-lg shadow-sky-600/20"
           >
-            <PlusCircle className="w-5 h-5" />
-            Quick Create
+            <Plus className="w-5 h-5" />
+            Create Survey
           </Link>
         </div>
 
-        {/* Creation Options Grid - Just 2 Options */}
+        {/* Surveys Section */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold tracking-tight text-slate-200">What would you like to build?</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Option 1: Survey */}
-            <div className="p-8 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between group">
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-6 group-hover:scale-110 transition">
-                  <FileText className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">Survey</h3>
-                <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                  Design versatile feedback forms, data collection sheets, or questionnaires supporting multi-choice, text inputs, ratings, and images.
-                </p>
-              </div>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-sky-400" />
+            Active Surveys
+          </h2>
+
+          {isLoading ? (
+            <div className="p-12 text-center rounded-3xl bg-slate-900/40 border border-slate-800 text-slate-500">
+              Loading your surveys...
+            </div>
+          ) : surveys.length === 0 ? (
+            <div className="p-12 text-center rounded-3xl border border-dashed border-slate-800 space-y-3">
+              <p className="text-slate-400 text-sm">You haven't created any surveys yet.</p>
               <Link
                 href="/create-survey"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-sky-400 hover:text-sky-300"
+                className="inline-block px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-sky-400 text-xs font-semibold rounded-xl transition"
               >
-                Create Survey &rarr;
+                Create your first survey
               </Link>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {surveys.map((survey) => {
+                const isCopied = copiedId === survey.id;
+                return (
+                  <div 
+                    key={survey.id}
+                    className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:border-slate-700"
+                  >
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold text-white">{survey.title}</h3>
+                      <p className="text-slate-400 text-xs line-clamp-1">{survey.description || "No description provided."}</p>
+                      <p className="text-[10px] text-slate-500 pt-1">Created on {new Date(survey.createdAt).toLocaleDateString()}</p>
+                    </div>
 
-            {/* Option 2: Online Test / Quiz */}
-            <div className="p-8 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between group">
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6 group-hover:scale-110 transition">
-                  <GraduationCap className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">Online Test / Quiz</h3>
-                <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                  Build graded examinations with answer keys, automatic scoring, point allocations, and countdown timers.
-                </p>
-              </div>
-              <Link
-                href="/survey/new?mode=quiz"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300"
-              >
-                Create Test &rarr;
-              </Link>
+                    <div className="flex items-center gap-2 self-end md:self-auto">
+                      <button
+                        onClick={() => handleCopyLink(survey.id)}
+                        className={`px-4 py-2 rounded-xl border text-xs font-semibold transition flex items-center gap-1.5 ${
+                          isCopied 
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                            : "bg-slate-950/50 border-slate-800 text-slate-300 hover:border-slate-700"
+                        }`}
+                      >
+                        {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {isCopied ? "Copied Link!" : "Copy Link"}
+                      </button>
+
+                      <Link
+                        href={`/survey/${survey.id}`}
+                        target="_blank"
+                        className="p-2 rounded-xl bg-slate-950/50 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition"
+                        title="Preview Survey"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-
-          </div>
-        </div>
-
-        {/* Recent Surveys Section */}
-        <div className="space-y-4 pt-6">
-          <h2 className="text-xl font-bold tracking-tight text-slate-200">Recent Forms & Tests</h2>
-          <div className="p-10 rounded-3xl bg-slate-950 border border-slate-900 text-center text-slate-500">
-            <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
-            <p>You haven't created anything yet. Choose an option above to get started!</p>
-          </div>
+          )}
         </div>
 
       </div>

@@ -1,34 +1,62 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import SurveyTakerForm from "@/app/components/survey/SurveyTakerForm";
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
+export default function SurveyTakerPage() {
+  const params = useParams();
+  const surveyId = params?.id as string;
 
-export default async function SurveyTakerPage({ params }: PageProps) {
-  const { id } = params;
+  const [survey, setSurvey] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Fetch survey and its related questions using Prisma's one-way relation
-  const survey = await db.survey.findUnique({
-    where: { id },
-    include: {
-      questions: {
-        orderBy: { order: "asc" },
-      },
-    },
-  });
+  useEffect(() => {
+    async function fetchSurveyData() {
+      try {
+        const res = await fetch(`/api/surveys/${surveyId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSurvey(data.data);
+        } else {
+          setError("Survey not found or no longer available.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load survey.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  if (!survey) {
-    notFound();
+    if (surveyId) {
+      fetchSurveyData();
+    }
+  }, [surveyId]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-400 flex items-center justify-center">
+        Loading survey...
+      </div>
+    );
+  }
+
+  if (error || !survey) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-rose-400 flex flex-col items-center justify-center space-y-2">
+        <h2 className="text-xl font-bold">Oops!</h2>
+        <p className="text-sm">{error || "Survey not found."}</p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-12 px-6">
       <div className="max-w-3xl mx-auto space-y-8">
         
-        {/* Survey Header Banner */}
+        {/* Survey Header */}
         <div className="p-8 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-2 shadow-xl">
           <h1 className="text-3xl font-extrabold tracking-tight text-white">{survey.title}</h1>
           {survey.description && (
@@ -36,8 +64,8 @@ export default async function SurveyTakerPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* Interactive Response Form */}
-        <SurveyTakerForm survey={survey} />
+        {/* Interactive Taker Form */}
+        <SurveyTakerForm surveyId={survey.id} questions={survey.questions} />
 
       </div>
     </div>

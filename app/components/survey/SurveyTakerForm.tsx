@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Send, CheckCircle2 } from "lucide-react";
 
 interface SurveyTakerFormProps {
-  survey: any;
+  surveyId: string;
+  questions: any[];
 }
 
-export default function SurveyTakerForm({ survey }: SurveyTakerFormProps) {
-  const router = useRouter();
+export default function SurveyTakerForm({ surveyId, questions }: SurveyTakerFormProps) {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -41,7 +40,7 @@ export default function SurveyTakerForm({ survey }: SurveyTakerFormProps) {
     e.preventDefault();
 
     // Validate required questions
-    for (const q of survey.questions) {
+    for (const q of questions) {
       if (q.required && (!answers[q.id] || (Array.isArray(answers[q.id]) && answers[q.id].length === 0))) {
         alert(`Please answer the required question: "${q.text}"`);
         return;
@@ -50,7 +49,7 @@ export default function SurveyTakerForm({ survey }: SurveyTakerFormProps) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/surveys/${survey.id}/submit`, {
+      const response = await fetch(`/api/surveys/responses/${surveyId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers }),
@@ -71,7 +70,7 @@ export default function SurveyTakerForm({ survey }: SurveyTakerFormProps) {
 
   if (submitted) {
     return (
-      <div className="p-12 rounded-3xl bg-slate-900/80 border border-slate-800 text-center space-y-4">
+      <div className="p-12 rounded-3xl bg-slate-900/80 border border-slate-800 text-center space-y-4 shadow-xl">
         <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
           <CheckCircle2 className="w-8 h-8" />
         </div>
@@ -83,10 +82,10 @@ export default function SurveyTakerForm({ survey }: SurveyTakerFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {survey.questions.map((q: any, index: number) => (
+      {questions.map((q, index) => (
         <div key={q.id} className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4">
           
-          {/* Question Title & Required Tag */}
+          {/* Question Header */}
           <div className="flex items-start justify-between gap-4">
             <h3 className="text-base font-semibold text-white">
               <span className="text-sky-400 mr-2">Q{index + 1}.</span>
@@ -95,8 +94,6 @@ export default function SurveyTakerForm({ survey }: SurveyTakerFormProps) {
             </h3>
           </div>
 
-          {/* Conditional Input Rendering */}
-          
           {/* 1. Multiple Choice */}
           {q.type === "MULTIPLE_CHOICE" && (
             <div className="space-y-2.5 pt-2">
@@ -180,7 +177,7 @@ export default function SurveyTakerForm({ survey }: SurveyTakerFormProps) {
             <div className="space-y-4">
               {q.imageUrl && (
                 <div className="w-full h-48 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
-                  <img src={q.imageUrl} alt="Survey Question visual" className="w-full h-full object-cover" />
+                  <img src={q.imageUrl} alt="Survey visual prompt" className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="space-y-2.5">

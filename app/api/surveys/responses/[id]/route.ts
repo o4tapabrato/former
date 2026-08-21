@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSurveybyId } from "@/lib/survey";
-import { createResponse, getResponses } from "@/lib/surveyResponse";
+import { createResponse } from "@/lib/surveyResponse";
 
-export async function POST(request: Request, { params }: { params: { id: string} }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> | { id: string }}) {
     try {
-        const { id: surveyId } = params;
+        const resolvedParams = await params;
+        const surveyId = resolvedParams?.id;
+
         const body = await request.json();
         const { answers } = body;
 
