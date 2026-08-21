@@ -43,6 +43,15 @@ model SurveyQuestion {
   maxRating   Int?              
 }
 
+model SurveyResponse {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  surveyId  String   @db.ObjectId // Indexed foreign key
+  answers   Json     
+  createdAt DateTime @default(now())
+
+  @@index([surveyId])
+}
+
 enum SurveyQuestionType {
   MULTIPLE_CHOICE
   CHECKBOX

@@ -1,37 +1,39 @@
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-export async function createSurvey(survey: any) {
+export async function POST(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
     try {
-        if (!survey.title) {
-            throw new Error("Missing required fields !!!");
+        const { id: surveyId } = params;
+        const body = await request.json();
+        const { answers } = body;
+
+        if (!answers) {
+            return NextResponse.json({ error: "No answers provided" }, { status: 400 });
         }
 
-        // Prisma automatically assigns the generated survey.id to each question's surveyId field
-        const newSurvey = await db.survey.create({
-            data: {
-                title: survey.title,
-                description: survey.description || "",
-                userId: survey.userId,
-                questions: {
-                    create: (survey.questions || []).map((q: any, index: number) => ({
-                        type: q.type,
-                        text: q.text,
-                        order: q.order ?? index,
-                        required: q.required || false,
-                        options: q.options || [],
-                        imageUrl: q.imageUrl || null,
-                        maxRating: q.maxRating || null
-                    })),
-                },
-            },
-            include: {
-                questions: true // Instantly returns the created questions mapped to the survey
-            }
+        // Verify the survey actually exists before saving responses
+        const survey = await db.survey.findUnique({
+            where: { id: surveyId },
         });
 
-        return newSurvey;
+        if (!survey) {
+            return NextResponse.json({ error: "Survey not found" }, { status: 404 });
+        }
+
+        // Save response independently into the SurveyResponse collection
+        const newResponse = await db.surveyResponse.create({
+            data: {
+                surveyId,
+                answers,
+            },
+        });
+
+        return NextResponse.json({ success: true, response: newResponse }, { status: 201 });
     } catch (error) {
-        console.error("Database error in createSurvey:", error);
-        throw error;
+        console.error("Error submitting survey response:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
