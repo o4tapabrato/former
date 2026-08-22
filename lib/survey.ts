@@ -14,6 +14,11 @@ export async function getSurveybyId(surveyId: string) {
                 },
             },
         });
+
+        if(!survey?.published) {
+            throw new Error("Survey not published !!!");
+        }
+        
         return survey;
     }
     catch (error) {
@@ -46,6 +51,7 @@ export async function getDashboardPageSurvey(userId: string) {
         const surveys = await db.survey.findMany({
             where: {
                 userId: userId,
+                published: true,
                 expiresAt: { gte: currentDate }
             },
             orderBy: {

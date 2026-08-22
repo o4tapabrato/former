@@ -14,6 +14,7 @@ export async function createSurvey(survey: any) {
                 title: survey.title,
                 description: survey.description || "",
                 userId: survey.userId,
+                published: survey.published,
                 expiresAt: expiresAt,
                 questions: {
                     create: (survey.questions || []).map((q: any, index: number) => ({

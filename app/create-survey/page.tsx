@@ -31,6 +31,49 @@ export default function NewSurveyPage() {
   const [questions, setQuestions] = useState<BuilderQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleSaveSurvey = async (isPublished = true) => {
+    if (!title.trim()) {
+      alert("Please enter a survey title.");
+      return;
+    }
+
+    if (!expiresAt) {
+      alert("Please specify an expiration date and time.");
+      return;
+    }
+
+    if (questions.length === 0) {
+      alert("Please add at least one question to your survey.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/surveys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          expiresAt: new Date(expiresAt).toISOString(), 
+          questions,
+          published: isPublished // <--- Distinguishes between draft and live
+        }),
+      });
+
+      if (response.ok) {
+        router.push("/dashboard");
+      } else {
+        alert("Failed to save survey.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while saving.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const addQuestionTemplate = (type: BuilderQuestion["type"]) => {
     const newQuestion: BuilderQuestion = {
       id: crypto.randomUUID(),
@@ -87,48 +130,6 @@ export default function NewSurveyPage() {
     );
   };
 
-  const handleSaveSurvey = async () => {
-    if (!title.trim()) {
-      alert("Please enter a survey title.");
-      return;
-    }
-
-    if (!expiresAt) {
-      alert("Please specify an expiration date and time.");
-      return;
-    }
-
-    if (questions.length === 0) {
-      alert("Please add at least one question to your survey.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("/api/surveys", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          title, 
-          description, 
-          expiresAt: new Date(expiresAt).toISOString(), 
-          questions 
-        }),
-      });
-
-      if (response.ok) {
-        router.push("/dashboard");
-      } else {
-        alert("Failed to create survey.");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("An error occurred while saving.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -157,14 +158,25 @@ export default function NewSurveyPage() {
             />
           ))}
 
-          <button
-            onClick={handleSaveSurvey}
-            disabled={isSubmitting}
-            className="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20"
-          >
-            <Save className="w-5 h-5" />
-            {isSubmitting ? "Saving Survey..." : "Publish Survey"}
-          </button>
+          {/* Action Buttons: Save Draft vs Publish */}
+          <div className="flex items-center gap-4 pt-2">
+            <button
+              onClick={() => handleSaveSurvey(false)}
+              disabled={isSubmitting}
+              className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold rounded-2xl transition flex items-center justify-center gap-2"
+            >
+              Save as Draft
+            </button>
+            
+            <button
+              onClick={() => handleSaveSurvey(true)}
+              disabled={isSubmitting}
+              className="flex-1 py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20"
+            >
+              <Save className="w-5 h-5" />
+              {isSubmitting ? "Saving..." : "Publish Survey"}
+            </button>
+          </div>
         </div>
 
         {/* Sidebar Question Palette */}

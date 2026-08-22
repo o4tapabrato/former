@@ -23,6 +23,7 @@ export async function POST(request: Request) {
             ...body,
             userId: id,
             user: user,
+            published: body.published ?? true,
             expiresAt: expiresAt,
         };
         const newSurvey = await createSurvey(surveyData);
