@@ -8,6 +8,7 @@ export async function createSurvey(survey: any) {
         }
 
         const expiresAt = survey.expiresAt ? new Date(survey.expiresAt) : null;
+        console.log(survey.expiresAt);
 
         const newSurvey = await db.survey.create({
             data: {

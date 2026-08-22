@@ -8,7 +8,6 @@ import {
   AlignLeft, 
   Star, 
   Image as ImageIcon, 
-  Plus, 
   Save,
   Calendar
 } from "lucide-react";
@@ -24,11 +23,18 @@ interface BuilderQuestion {
   maxRating?: number;
 }
 
+// Helper function to get default date/time 7 days from now formatted for datetime-local
+const getDefaultExpiry = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 7);
+  return date.toISOString().slice(0, 16);
+};
+
 export default function NewSurveyPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [expiresAt, setExpiresAt] = useState(""); // <-- Added state for expiration
+  const [expiresAt, setExpiresAt] = useState(getDefaultExpiry()); // Prefilled with 7 days from now
   const [questions, setQuestions] = useState<BuilderQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -94,6 +100,11 @@ export default function NewSurveyPage() {
       return;
     }
 
+    if (!expiresAt) {
+      alert("Please specify an expiration date and time.");
+      return;
+    }
+
     if (questions.length === 0) {
       alert("Please add at least one question to your survey.");
       return;
@@ -107,7 +118,7 @@ export default function NewSurveyPage() {
         body: JSON.stringify({ 
           title, 
           description, 
-          expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+          expiresAt: new Date(expiresAt).toISOString(), 
           questions 
         }),
       });
@@ -151,15 +162,16 @@ export default function NewSurveyPage() {
             <div className="pt-4 border-t border-slate-800/80 space-y-2">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-sky-400" />
-                Expiration Date & Time (Optional)
+                Expiration Date & Time (Required - Default 7 Days)
               </label>
               <input 
                 type="datetime-local"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
+                required
                 className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500"
               />
-              <p className="text-[11px] text-slate-500">If set, respondents will not be able to submit answers after this deadline.</p>
+              <p className="text-[11px] text-slate-500">Respondents will not be able to submit answers after this deadline.</p>
             </div>
           </div>
 

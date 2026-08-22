@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         const user = await getUserDataFromId(id);
 
         const body = await request.json();
-        const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
+        const expiresAt = body.expiresAt;
         const surveyData = {
             ...body,
             userId: id,
