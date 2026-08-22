@@ -22,7 +22,7 @@ model Survey {
   title       String
   description String?
   createdAt   DateTime         @default(now())
-  expiresAt   DateTime?
+  expiresAt   DateTime
   updatedAt   DateTime         @updatedAt
   userId      String           @db.ObjectId
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
