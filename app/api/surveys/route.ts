@@ -23,7 +23,7 @@ export async function POST(request: Request) {
             ...body,
             userId: id,
             user: user,
-            expiresAt: expiresAt, // Overwrite with the verified Date object
+            expiresAt: expiresAt,
         };
         const newSurvey = await createSurvey(surveyData);
         return NextResponse.json(

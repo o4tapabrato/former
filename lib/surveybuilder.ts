@@ -7,8 +7,7 @@ export async function createSurvey(survey: any) {
             ("Missing required fields !!!");
         }
 
-        const expiresAt = survey.expiresAt ? new Date(survey.expiresAt) : null;
-        console.log(survey.expiresAt);
+        const expiresAt = new Date(survey.expiresAt);
 
         const newSurvey = await db.survey.create({
             data: {

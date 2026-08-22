@@ -28,3 +28,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         )
     }
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{id: string}> }) {
+    try {
+
+    }
+    catch (error) {
+        console.log(error);
+        return NextResponse.json(
+            { error: "Internal server error !!!" },
+            { status: 500 }
+        )
+    }
+}
