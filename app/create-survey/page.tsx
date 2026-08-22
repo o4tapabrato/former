@@ -2,16 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  ListOrdered, 
-  CheckSquare, 
-  AlignLeft, 
-  Star, 
-  Image as ImageIcon, 
-  Save,
-  Calendar
-} from "lucide-react";
+import { Save } from "lucide-react";
 import QuestionCard from "../components/builder/QuestionCard";
+import SurveyMetaEditor from "../components/builder/SurveyMetaEditor";
+import QuestionPalette from "../components/builder/QuestionPalette";
 
 interface BuilderQuestion {
   id: string;
@@ -23,7 +17,6 @@ interface BuilderQuestion {
   maxRating?: number;
 }
 
-// Helper function to get default date/time 7 days from now formatted for datetime-local
 const getDefaultExpiry = () => {
   const date = new Date();
   date.setDate(date.getDate() + 7);
@@ -34,7 +27,7 @@ export default function NewSurveyPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [expiresAt, setExpiresAt] = useState(getDefaultExpiry()); // Prefilled with 7 days from now
+  const [expiresAt, setExpiresAt] = useState(getDefaultExpiry());
   const [questions, setQuestions] = useState<BuilderQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -142,38 +135,14 @@ export default function NewSurveyPage() {
         
         {/* Main Form Builder Area */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4 shadow-xl">
-            <input 
-              type="text" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-transparent text-2xl font-extrabold text-white border-b border-slate-800 pb-2 focus:outline-none focus:border-sky-500"
-              placeholder="Survey Title"
-            />
-            <textarea 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-transparent text-slate-400 text-sm resize-none focus:outline-none"
-              placeholder="Survey description (optional)..."
-              rows={2}
-            />
-
-            {/* Expiration Date Picker Section */}
-            <div className="pt-4 border-t border-slate-800/80 space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-sky-400" />
-                Expiration Date & Time (Required - Default 7 Days)
-              </label>
-              <input 
-                type="datetime-local"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                required
-                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500"
-              />
-              <p className="text-[11px] text-slate-500">Respondents will not be able to submit answers after this deadline.</p>
-            </div>
-          </div>
+          <SurveyMetaEditor
+            title={title}
+            setTitle={setTitle}
+            description={description}
+            setDescription={setDescription}
+            expiresAt={expiresAt}
+            setExpiresAt={setExpiresAt}
+          />
 
           {questions.map((q, index) => (
             <QuestionCard
@@ -200,46 +169,7 @@ export default function NewSurveyPage() {
 
         {/* Sidebar Question Palette */}
         <div className="space-y-4">
-          <div className="sticky top-24 p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4 shadow-xl">
-            <h3 className="text-lg font-bold text-white tracking-tight">Question Types</h3>
-            <div className="space-y-2.5">
-              <button
-                onClick={() => addQuestionTemplate("MULTIPLE_CHOICE")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
-              >
-                <ListOrdered className="w-5 h-5 text-indigo-400" />
-                <span className="text-sm font-semibold text-white">Multiple Choice</span>
-              </button>
-              <button
-                onClick={() => addQuestionTemplate("CHECKBOX")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
-              >
-                <CheckSquare className="w-5 h-5 text-emerald-400" />
-                <span className="text-sm font-semibold text-white">Checkboxes</span>
-              </button>
-              <button
-                onClick={() => addQuestionTemplate("TEXT")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
-              >
-                <AlignLeft className="w-5 h-5 text-amber-400" />
-                <span className="text-sm font-semibold text-white">Open Text</span>
-              </button>
-              <button
-                onClick={() => addQuestionTemplate("RATING")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
-              >
-                <Star className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm font-semibold text-white">Rating Scale</span>
-              </button>
-              <button
-                onClick={() => addQuestionTemplate("IMAGE_CHOICE")}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-sky-500/50 text-left transition"
-              >
-                <ImageIcon className="w-5 h-5 text-sky-400" />
-                <span className="text-sm font-semibold text-white">Visual Choice</span>
-              </button>
-            </div>
-          </div>
+          <QuestionPalette onAddQuestion={addQuestionTemplate} />
         </div>
 
       </div>

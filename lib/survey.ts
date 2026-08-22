@@ -59,3 +59,16 @@ export async function getDashboardPageSurvey(userId: string) {
         throw error;
     }
 }
+
+export async function deleteSurveyById(surveyId: string) {
+    try {
+        await db.survey.delete({
+            where: {
+                id: surveyId
+            }
+        });
+    }
+    catch (error) {
+        throw error;
+    }
+}
