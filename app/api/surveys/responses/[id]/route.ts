@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSurveybyId } from "@/lib/survey";
+import { getSurveybyId, getSurveyByIdforResponse } from "@/lib/survey";
 import { createResponse } from "@/lib/surveyResponse";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
@@ -44,6 +44,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         console.log(error);
         return NextResponse.json(
             { error: "Internal server error !!!" },
+            { status: 500 }
+        );
+    }
+}
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> | { id: string }}) {
+    try {
+        const resolvedParams = await params;
+        const surveyId = resolvedParams?.id;
+        const survey = await getSurveyByIdforResponse(surveyId);
+
+        if (!survey) {
+            return NextResponse.json(
+                { error: "Survey not found !!!" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            { data: survey },
+            { status: 200 }
+        );
+    }
+    catch (error) {
+        return NextResponse.json(
+            { error: "Internal Server Error !!!" },
             { status: 500 }
         );
     }

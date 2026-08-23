@@ -38,8 +38,8 @@ export default function EditSurveyPage() {
         const res = await fetch(`/api/surveys/${surveyId}`);
         const data = await res.json();
 
-        if (res.ok && data.survey) {
-          const s = data.survey;
+        if (res.ok && data.data) {
+          const s = data.data;
           setTitle(s.title);
           setDescription(s.description || "");
           setExpiresAt(s.expiresAt ? new Date(s.expiresAt).toISOString().slice(0, 16) : "");

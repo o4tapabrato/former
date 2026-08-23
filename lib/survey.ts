@@ -16,10 +16,54 @@ export async function getSurveybyId(surveyId: string) {
             },
         });
 
-        if(!survey?.published) {
-            throw new Error("Survey not published !!!");
+        return survey;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+export async function getSurveyByIdforEdit(surveyId: string) {
+    try {
+        const survey = await db.survey.findUnique({
+            where: {
+                id: surveyId
+            },
+            include: {
+                questions: {
+                    orderBy: { order: "asc" },
+                },
+            },
+        });
+
+        if(!survey) {
+            throw new Error("Survey doesnt exist !!!");
         }
-        
+
+        return survey;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+export async function getSurveyByIdforResponse(surveyId: string) {
+    try {
+        const survey = await db.survey.findUnique({
+            where: {
+                id: surveyId
+            },
+            include: {
+                questions: {
+                    orderBy: { order: "asc" },
+                },
+            },
+        });
+
+        if(!survey || !survey?.published) {
+            throw new Error("Survey doesnt exist or is not published !!!");
+        }
+
         return survey;
     }
     catch (error) {

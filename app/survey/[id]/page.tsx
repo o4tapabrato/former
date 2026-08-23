@@ -15,7 +15,7 @@ export default function SurveyTakerPage() {
   useEffect(() => {
     async function fetchSurveyData() {
       try {
-        const res = await fetch(`/api/surveys/${surveyId}`);
+        const res = await fetch(`/api/surveys/responses/${surveyId}`);
         if (res.ok) {
           const data = await res.json();
           setSurvey(data.data);

@@ -118,7 +118,7 @@ export default function AllSurveysPage() {
           <div className="p-16 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center space-y-3">
             <p className="text-sm text-slate-400">No {activeTab} found in your library.</p>
             <Link
-              href="/survey/new"
+              href="/create-survey"
               className="inline-flex items-center gap-2 text-xs font-semibold text-sky-400 hover:underline"
             >
               Create a new one now &rarr;
@@ -149,7 +149,7 @@ export default function AllSurveysPage() {
                   {/* Action Buttons Toolbar */}
                   <div className="flex items-center gap-2 pt-2">
                     <Link
-                      href={`/survey/${item.id}/responses`}
+                      href={`/survey/${item.id}`}
                       className="flex-1 py-2.5 bg-sky-600/10 hover:bg-sky-600/20 border border-sky-500/30 rounded-xl text-center text-xs font-semibold text-sky-400 transition flex items-center justify-center gap-1.5"
                     >
                       <BarChart3 className="w-3.5 h-3.5" />
@@ -175,7 +175,7 @@ export default function AllSurveysPage() {
 
                     {!item.published && (
                       <Link
-                        href={`/survey/edit/${item.id}`}
+                        href={`/create-survey/${item.id}`}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-semibold text-sky-400 transition shadow-sm"
                       >
                         <Edit3 className="w-3.5 h-3.5" />

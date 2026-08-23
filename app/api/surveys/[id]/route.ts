@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
-import { deleteSurveyById, getSurveybyId, updateSurvey } from "@/lib/survey";
+import { deleteSurveyById, getSurveybyId, getSurveyByIdforEdit, updateSurvey } from "@/lib/survey";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
@@ -51,7 +51,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         const body = await request.json();
         const resolvedParams = await params;
 
-        const savedSurvey = await getSurveybyId(resolvedParams.id);
+        const savedSurvey = await getSurveyByIdforEdit(resolvedParams.id);
 
         if(savedSurvey.userId != id) {
             return NextResponse.json(
