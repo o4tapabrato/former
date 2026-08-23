@@ -1,6 +1,7 @@
 import { use } from "react";
 import { db } from "./prisma";
 import { userInfo } from "os";
+import { Survey } from "@prisma/client";
 
 export async function getSurveybyId(surveyId: string) {
     try {
@@ -73,6 +74,44 @@ export async function deleteSurveyById(surveyId: string) {
                 id: surveyId
             }
         });
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+export async function updateSurvey(newSurvey: any) {
+    try {
+        await db.surveyQuestion.deleteMany({
+            where: {
+                surveyId: newSurvey.id
+            }
+        })
+
+        const res = await db.survey.update({
+            where: {
+                id: newSurvey.id
+            },
+            data: {
+                title: newSurvey.title,
+                description: newSurvey.description,
+                expiresAt: newSurvey.expiresAt,
+                published: newSurvey.published ?? false,
+                questions: {
+                    create: (newSurvey.questions || []).map((q: any, index: number) => ({
+                        type: q.type,
+                        text: q.text,
+                        order: q.order ?? index,
+                        required: q.required || false,
+                        options: q.options || [],
+                        imageUrl: q.imageUrl || null,
+                        maxRating: q.maxRating || null
+                    }))
+                }
+            },
+            include: { questions: true }
+        });
+        return true;
     }
     catch (error) {
         throw error;

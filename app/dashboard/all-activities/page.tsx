@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Trash2, 
-  BarChart3, 
-  ExternalLink, 
-  Layers, 
-  CheckSquare 
+import {
+  ArrowLeft,
+  Calendar,
+  Trash2,
+  BarChart3,
+  ExternalLink,
+  Layers,
+  CheckSquare,
+  Edit3
 } from "lucide-react";
 
 interface SurveyItem {
@@ -17,6 +18,7 @@ interface SurveyItem {
   title: string;
   description?: string;
   expiresAt: string;
+  published: boolean;
   createdAt: string;
   type?: "survey" | "test"; // Optional category differentiator if applicable
 }
@@ -69,10 +71,10 @@ export default function AllSurveysPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* Navigation & Header */}
         <div className="space-y-4">
-          <Link 
+          <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition"
           >
@@ -89,21 +91,19 @@ export default function AllSurveysPage() {
             <div className="p-1.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-1 shadow-inner">
               <button
                 onClick={() => setActiveTab("surveys")}
-                className={`px-5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${
-                  activeTab === "surveys" 
-                    ? "bg-sky-600 text-white shadow-md shadow-sky-600/20" 
-                    : "text-slate-400 hover:text-white"
-                }`}
+                className={`px-5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${activeTab === "surveys"
+                  ? "bg-sky-600 text-white shadow-md shadow-sky-600/20"
+                  : "text-slate-400 hover:text-white"
+                  }`}
               >
                 <Layers className="w-3.5 h-3.5" /> Surveys
               </button>
               <button
                 onClick={() => setActiveTab("tests")}
-                className={`px-5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${
-                  activeTab === "tests" 
-                    ? "bg-sky-600 text-white shadow-md shadow-sky-600/20" 
-                    : "text-slate-400 hover:text-white"
-                }`}
+                className={`px-5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${activeTab === "tests"
+                  ? "bg-sky-600 text-white shadow-md shadow-sky-600/20"
+                  : "text-slate-400 hover:text-white"
+                  }`}
               >
                 <CheckSquare className="w-3.5 h-3.5" /> Tests
               </button>
@@ -117,7 +117,7 @@ export default function AllSurveysPage() {
         ) : items.length === 0 ? (
           <div className="p-16 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center space-y-3">
             <p className="text-sm text-slate-400">No {activeTab} found in your library.</p>
-            <Link 
+            <Link
               href="/survey/new"
               className="inline-flex items-center gap-2 text-xs font-semibold text-sky-400 hover:underline"
             >
@@ -127,7 +127,7 @@ export default function AllSurveysPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => (
-              <div 
+              <div
                 key={item.id}
                 className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-sky-500/40 transition flex flex-col justify-between space-y-6 shadow-xl group"
               >
@@ -172,6 +172,16 @@ export default function AllSurveysPage() {
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+
+                    {!item.published && (
+                      <Link
+                        href={`/survey/edit/${item.id}`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-semibold text-sky-400 transition shadow-sm"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        Edit Draft
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
