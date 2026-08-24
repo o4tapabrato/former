@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation"; // <--- Import useSearchParams
 import SurveyTakerForm from "@/app/components/survey/SurveyTakerForm";
 
 export default function SurveyTakerPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const surveyId = params?.id as string;
+  const token = searchParams.get("token") || undefined;
 
   const [survey, setSurvey] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +67,11 @@ export default function SurveyTakerPage() {
         </div>
 
         {/* Interactive Taker Form */}
-        <SurveyTakerForm surveyId={survey.id} questions={survey.questions} />
+        <SurveyTakerForm 
+          surveyId={survey.id} 
+          questions={survey.questions} 
+          token={token}
+        />
 
       </div>
     </div>

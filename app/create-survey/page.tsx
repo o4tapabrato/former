@@ -57,8 +57,9 @@ export default function NewSurveyPage() {
           title,
           description,
           expiresAt: new Date(expiresAt).toISOString(),
+          restrictionPolicy: restrictionPolicy,
           questions,
-          published: isPublished // <--- Distinguishes between draft and live
+          published: isPublished
         }),
       });
 

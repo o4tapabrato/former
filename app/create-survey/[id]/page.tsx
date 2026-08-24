@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation"; // <--- Import useParams
+import { useParams, useRouter } from "next/navigation";
 import { Save, Loader2 } from "lucide-react";
 import QuestionCard from "@/app/components/builder/QuestionCard";
 import SurveyMetaEditor from "@/app/components/builder/SurveyMetaEditor";
@@ -26,7 +26,8 @@ export default function EditSurveyPage() {
   const [description, setDescription] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [questions, setQuestions] = useState<BuilderQuestion[]>([]);
-  
+  const [restrictionPolicy, setRestrictionPolicy] = useState("NONE"); // <--- Policy State
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,7 +44,8 @@ export default function EditSurveyPage() {
           setTitle(s.title);
           setDescription(s.description || "");
           setExpiresAt(s.expiresAt ? new Date(s.expiresAt).toISOString().slice(0, 16) : "");
-          
+          setRestrictionPolicy(s.restrictionPolicy || "NONE"); // <--- Load policy from DB
+
           const formattedQuestions = (s.questions || []).map((q: any) => ({
             id: q.id,
             type: q.type,
@@ -90,12 +92,13 @@ export default function EditSurveyPage() {
       const response = await fetch(`/api/surveys/${surveyId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          title, 
-          description, 
-          expiresAt: new Date(expiresAt).toISOString(), 
+        body: JSON.stringify({
+          title,
+          description,
+          expiresAt: new Date(expiresAt).toISOString(),
+          restrictionPolicy, // <--- Send policy to API
           questions,
-          published: isPublished 
+          published: isPublished
         }),
       });
 
@@ -181,7 +184,7 @@ export default function EditSurveyPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Main Form Builder Area */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between px-2">
@@ -195,6 +198,8 @@ export default function EditSurveyPage() {
             setDescription={setDescription}
             expiresAt={expiresAt}
             setExpiresAt={setExpiresAt}
+            restrictionPolicy={restrictionPolicy}
+            setRestrictionPolicy={setRestrictionPolicy}
           />
 
           {questions.map((q, index) => (
@@ -215,15 +220,15 @@ export default function EditSurveyPage() {
             <button
               onClick={() => handleSaveSurvey(false)}
               disabled={isSubmitting}
-              className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold rounded-2xl transition flex items-center justify-center gap-2"
+              className="flex-1 py-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 font-bold rounded-2xl transition flex items-center justify-center gap-2 cursor-pointer"
             >
               Save Changes
             </button>
-            
+
             <button
               onClick={() => handleSaveSurvey(true)}
               disabled={isSubmitting}
-              className="flex-1 py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20"
+              className="flex-1 py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20 cursor-pointer"
             >
               <Save className="w-5 h-5" />
               {isSubmitting ? "Updating..." : "Publish Survey"}

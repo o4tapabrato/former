@@ -8,12 +8,14 @@ import QuestionRenderer from "../taker/QuestionRenderer";
 interface SurveyTakerFormProps {
   surveyId: string;
   questions: any[];
+  token?: string; // <--- Add token prop
 }
 
-export default function SurveyTakerForm({ surveyId, questions }: SurveyTakerFormProps) {
+export default function SurveyTakerForm({ surveyId, questions, token }: SurveyTakerFormProps) {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // <--- Added error state for better UI feedback
 
   const handleAnswerChange = (questionId: string, value: any, type: string) => {
     if (type === "CHECKBOX") {
@@ -39,6 +41,7 @@ export default function SurveyTakerForm({ surveyId, questions }: SurveyTakerForm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage("");
 
     for (const q of questions) {
       if (q.required && (!answers[q.id] || (Array.isArray(answers[q.id]) && answers[q.id].length === 0))) {
@@ -52,17 +55,22 @@ export default function SurveyTakerForm({ surveyId, questions }: SurveyTakerForm
       const response = await fetch(`/api/surveys/responses/${surveyId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ 
+          answers,
+          token // <--- Pass the token along with answers
+        }),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         setSubmitted(true);
       } else {
-        alert("Failed to submit survey. Please try again.");
+        setErrorMessage(data.error || "Failed to submit survey. Please try again.");
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred during submission.");
+      setErrorMessage("An error occurred during submission.");
     } finally {
       setIsSubmitting(false);
     }
@@ -74,6 +82,12 @@ export default function SurveyTakerForm({ surveyId, questions }: SurveyTakerForm
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {errorMessage && (
+        <div className="p-4 rounded-2xl bg-red-950/40 border border-red-900/50 text-red-400 text-sm font-medium">
+          {errorMessage}
+        </div>
+      )}
+
       {questions.map((q, index) => (
         <QuestionRenderer
           key={q.id}
@@ -87,7 +101,7 @@ export default function SurveyTakerForm({ surveyId, questions }: SurveyTakerForm
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20"
+        className="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/25 cursor-pointer"
       >
         <Send className="w-5 h-5" />
         {isSubmitting ? "Submitting Response..." : "Submit Response"}
