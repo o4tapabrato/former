@@ -30,6 +30,7 @@ export default function NewSurveyPage() {
   const [expiresAt, setExpiresAt] = useState(getDefaultExpiry());
   const [questions, setQuestions] = useState<BuilderQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [restrictionPolicy, setRestrictionPolicy] = useState("NONE");
 
   const handleSaveSurvey = async (isPublished = true) => {
     if (!title.trim()) {
@@ -52,10 +53,10 @@ export default function NewSurveyPage() {
       const response = await fetch("/api/surveys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          title, 
-          description, 
-          expiresAt: new Date(expiresAt).toISOString(), 
+        body: JSON.stringify({
+          title,
+          description,
+          expiresAt: new Date(expiresAt).toISOString(),
           questions,
           published: isPublished // <--- Distinguishes between draft and live
         }),
@@ -133,7 +134,7 @@ export default function NewSurveyPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Main Form Builder Area */}
         <div className="lg:col-span-2 space-y-6">
           <SurveyMetaEditor
@@ -143,6 +144,8 @@ export default function NewSurveyPage() {
             setDescription={setDescription}
             expiresAt={expiresAt}
             setExpiresAt={setExpiresAt}
+            restrictionPolicy={restrictionPolicy}
+            setRestrictionPolicy={setRestrictionPolicy}
           />
 
           {questions.map((q, index) => (
@@ -167,7 +170,7 @@ export default function NewSurveyPage() {
             >
               Save as Draft
             </button>
-            
+
             <button
               onClick={() => handleSaveSurvey(true)}
               disabled={isSubmitting}

@@ -18,40 +18,52 @@ model User {
 }
 
 model Survey {
-  id          String           @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String?
-  createdAt   DateTime         @default(now())
-  expiresAt   DateTime
-  published   Boolean          @default(true)
-  updatedAt   DateTime         @updatedAt
-  userId      String           @db.ObjectId
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  title             String
+  description       String?
+  createdAt         DateTime         @default(now())
+  expiresAt         DateTime
+  published         Boolean          @default(true)
+  updatedAt         DateTime         @updatedAt
+  userId            String           @db.ObjectId
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restrictionPolicy String           @default("NONE")
   
-  questions   SurveyQuestion[] // Relation handled entirely by surveyId on the child side
+  questions         SurveyQuestion[]
+  tokens            SurveyToken[]
 }
 
 model SurveyQuestion {
-  id          String            @id @default(auto()) @map("_id") @db.ObjectId
-  surveyId    String            @db.ObjectId // Foreign key pointing to Survey
-  survey      Survey            @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  id        String             @id @default(auto()) @map("_id") @db.ObjectId
+  surveyId  String             @db.ObjectId // Foreign key pointing to Survey
+  survey    Survey             @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   
-  type        SurveyQuestionType
-  text        String
-  order       Int               @default(0)
-  required    Boolean           @default(false)
-  options     String[]          
-  imageUrl    String?           
-  maxRating   Int?              
+  type      SurveyQuestionType
+  text      String
+  order     Int                @default(0)
+  required  Boolean            @default(false)
+  options   String[]           
+  imageUrl  String?            
+  maxRating Int?               
 }
 
 model SurveyResponse {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  surveyId  String   @db.ObjectId // Indexed foreign key
+  surveyId  String   @db.ObjectId
   answers   Json     
   createdAt DateTime @default(now())
 
   @@index([surveyId])
+}
+
+model SurveyToken {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  token     String    @unique @default(uuid())
+  surveyId  String    @db.ObjectId
+  survey    Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  isUsed    Boolean   @default(false)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 }
 
 enum SurveyQuestionType {
