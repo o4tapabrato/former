@@ -51,6 +51,7 @@ model SurveyResponse {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   surveyId  String   @db.ObjectId
   answers   Json     
+  deviceIdentifier    String?
   createdAt DateTime @default(now())
 
   @@index([surveyId])

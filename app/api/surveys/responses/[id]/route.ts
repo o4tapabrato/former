@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSurveybyId, getSurveyByIdforResponse } from "@/lib/survey";
 import { createResponse } from "@/lib/surveyResponse";
+import { submitSurveyResponse } from "@/lib/response";
+import { headers } from "next/headers";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
     try {
@@ -8,7 +10,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const surveyId = resolvedParams?.id;
 
         const body = await request.json();
-        const { answers } = body;
+        const { answers, token } = body;
 
         if (!answers) {
             return NextResponse.json(
@@ -33,17 +35,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             );
         }
 
-        const newResponse = await createResponse({ surveyId, answers });
+        const headersList = await headers();
+        const forwardedFor = headersList.get("x-forwarded-for");
+        const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "unknown";
+        const userAgent = headersList.get("user-agent") || "unknown";
+
+        const newResponse = await submitSurveyResponse({ surveyId, answers, token, ip, userAgent });
 
         return NextResponse.json(
             { message: "Response submitted successfully" },
             { status: 201 }
         );
     }
-    catch (error) {
+    catch (error: any) {
         console.log(error);
         return NextResponse.json(
-            { error: "Internal server error !!!" },
+            { error: error.message || "Internal server error !!!" },
             { status: 500 }
         );
     }
@@ -68,6 +75,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         );
     }
     catch (error) {
+        console.log(error);
         return NextResponse.json(
             { error: "Internal Server Error !!!" },
             { status: 500 }

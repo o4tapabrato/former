@@ -1,113 +1,47 @@
-import { db } from "@/lib/db";
-import crypto from "crypto";
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+    try {
+        const resolvedParams = await params;
+        const surveyId = resolvedParams?.id;
 
-/**
- * Fetches a public survey by ID for the taker view, checking expiration.
- */
-export async function getSurveyForTaker(surveyId: string) {
-  const survey = await db.survey.findUnique({
-    where: { id: surveyId },
-    include: {
-      questions: {
-        orderBy: { order: "asc" },
-      },
-    },
-  });
+        const body = await request.json();
+        const { answers, token } = body; // <--- Extract token here
 
-  if (!survey || !survey.published) {
-    throw new Error("Survey not found or inactive.");
-  }
+        if (!answers) {
+            return NextResponse.json(
+                { error: "No answers are provided !!!" },
+                { status: 400 }
+            )
+        }
 
-  const isExpired = new Date(survey.expiresAt) < new Date();
-  if (isExpired) {
-    throw new Error("This survey has expired and is no longer accepting responses.");
-  }
+        const survey = await getSurveybyId(surveyId);
 
-  return survey;
-}
+        if (!survey) {
+            return NextResponse.json(
+                { error: "Survey not found !!!" },
+                { status: 404 }
+            );
+        }
 
-/**
- * Submits a survey response, enforcing restriction policies.
- */
-export async function submitSurveyResponse({
-  surveyId,
-  answers,
-  token,
-  ip = "unknown",
-  userAgent = "unknown",
-}: {
-  surveyId: string;
-  answers: any;
-  token?: string;
-  ip?: string;
-  userAgent?: string;
-}) {
-  const survey = await db.survey.findUnique({
-    where: { id: surveyId },
-  });
+        if (survey.expiresAt && new Date() > new Date(survey.expiresAt)) {
+            return NextResponse.json(
+                { error: "This survey has expired and is no longer accepting responses." },
+                { status: 403 }
+            );
+        }
 
-  if (!survey || !survey.published) {
-    throw new Error("Survey not found or inactive.");
-  }
+        // Pass the token along so your lib/surveyResponse function can enforce UNIQUE_TOKENS or device checks!
+        const newResponse = await createResponse({ surveyId, answers, token });
 
-  const isExpired = new Date(survey.expiresAt) < new Date();
-  if (isExpired) {
-    throw new Error("This survey has expired.");
-  }
-
-  // 1. Enforce UNIQUE_TOKENS policy
-  if (survey.restrictionPolicy === "UNIQUE_TOKENS") {
-    if (!token) {
-      throw new Error("A unique access token is required to submit this survey.");
+        return NextResponse.json(
+            { message: "Response submitted successfully" },
+            { status: 201 }
+        );
     }
-
-    const tokenRecord = await db.surveyToken.findUnique({
-      where: { token },
-    });
-
-    if (!tokenRecord || tokenRecord.surveyId !== surveyId) {
-      throw new Error("Invalid survey token.");
+    catch (error: any) {
+        console.log(error);
+        return NextResponse.json(
+            { error: error.message || "Internal server error !!!" },
+            { status: 400 } // Return 400 for policy violations (like invalid/used tokens) instead of 500
+        );
     }
-
-    if (tokenRecord.isUsed) {
-      throw new Error("This survey link has already been used and is no longer active.");
-    }
-  }
-
-  // 2. Enforce ONE_PER_DEVICE policy
-  let deviceIdentifier: string | null = null;
-  if (survey.restrictionPolicy === "ONE_PER_DEVICE") {
-    deviceIdentifier = crypto
-      .createHash("sha256")
-      .update(`${ip}-${userAgent}`)
-      .digest("hex");
-
-    const existingResponse = await db.surveyResponse.findFirst({
-      where: { surveyId, deviceIdentifier: deviceIdentifier as any },
-    });
-
-    if (existingResponse) {
-      throw new Error("You have already submitted a response from this device.");
-    }
-  }
-
-  // 3. Atomically save response and mark token as used
-  return await db.$transaction(async (tx) => {
-    const response = await tx.surveyResponse.create({
-      data: {
-        surveyId,
-        answers,
-        deviceIdentifier: deviceIdentifier as any,
-      },
-    });
-
-    if (survey.restrictionPolicy === "UNIQUE_TOKENS" && token) {
-      await tx.surveyToken.update({
-        where: { token },
-        data: { isUsed: true, usedAt: new Date() },
-      });
-    }
-
-    return response;
-  });
 }

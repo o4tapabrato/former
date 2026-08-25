@@ -2,8 +2,9 @@ import { error } from "console";
 import { db } from "./prisma";
 import crypto from "crypto";
 import { escapeIdentifier } from "pg";
+import { headers } from "next/headers";
 
-export async function getSurveyFortaker(surveyId: string) {
+export async function getSurveyForTaker(surveyId: string) {
     try {
         const survey = await db.survey.findUnique({
             where: { id: surveyId },
@@ -79,10 +80,15 @@ export async function submitSurveyResponse({
         if (survey.restrictionPolicy === "ONE_PER_DEVICE") {
             deviceIdentifier = crypto.createHash('sha256').update(`${ip}-${userAgent}`).digest("hex");
 
+            console.log("--- ONE_PER_DEVICE DEBUG ---");
+            console.log("IP:", ip);
+            console.log("User-Agent:", userAgent);
+            console.log("Generated Hash:", deviceIdentifier);
+
             const existingResponse = await db.surveyResponse.findFirst({
                 where: {
                     surveyId,
-                    deviceidentifier: deviceIdentifier as any
+                    deviceIdentifier: deviceIdentifier as any
                 }
             });
 
