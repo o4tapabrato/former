@@ -30,3 +30,18 @@ export async function createResponse(response: any) {
         throw error;
     }
 }
+
+export async function createNewToken(surveyId: string) {
+    try {
+        const newToken = await db.surveyToken.create({
+            data: {
+                surveyId: surveyId,
+                isUsed: false
+            }
+        });
+        return newToken;
+    }
+    catch(error) {
+        throw error;
+    }
+}
