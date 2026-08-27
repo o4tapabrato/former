@@ -1,3 +1,4 @@
+import { link } from "fs";
 import { db } from "./prisma";
 
 export async function getResponses(surveyid: string) {
@@ -42,6 +43,23 @@ export async function createNewToken(surveyId: string) {
         return newToken;
     }
     catch(error) {
+        throw error;
+    }
+}
+
+export async function getAllGeneratedLinks(surveyId: string) {
+    try {
+        const links = await db.surveyToken.findMany({
+            where: {
+                surveyId: surveyId,
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+        return links;
+    }
+    catch (error) {
         throw error;
     }
 }

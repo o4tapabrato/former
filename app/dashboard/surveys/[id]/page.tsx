@@ -22,7 +22,7 @@ export default function SurveyDetailsPage() {
       try {
         const [surveyRes, tokenRes] = await Promise.all([
           fetch(`/api/surveys/responses/${surveyId}`),
-          fetch(`/api/surveys/${surveyId}/tokens`),
+          fetch(`/api/surveys/responses/${surveyId}/link`),
         ]);
 
         if (surveyRes.ok) {
