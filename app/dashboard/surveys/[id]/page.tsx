@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Copy, Check, Plus, Upload, FileText, KeyRound, ArrowLeft } from "lucide-react";
+import { Copy, Check, Plus, Upload, FileText, KeyRound, ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
 
 export default function SurveyDetailsPage() {
@@ -45,10 +45,10 @@ export default function SurveyDetailsPage() {
   const generateSingleToken = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch(`/api/surveys/responses/${surveyId}/link`, { 
-        method: "POST", 
+      const res = await fetch(`/api/surveys/responses/${surveyId}/link`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: 1 }) 
+        body: JSON.stringify({ count: 1 })
       });
       const data = await res.json();
       if (res.ok) {
@@ -58,6 +58,33 @@ export default function SurveyDetailsPage() {
       console.error(err);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      const res = await fetch(`/api/surveys/${surveyId}/export`);
+      if (!res.ok) throw new Error("Export failed");
+
+      // Get the response as a blob (binary data)
+      const blob = await res.blob();
+
+      // Create a temporary local URL for the blob
+      const url = window.URL.createObjectURL(blob);
+
+      // Create an invisible <a> tag to trigger the download programmatically
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `survey-${surveyId}-responses.csv`;
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download CSV responses.");
     }
   };
 
@@ -111,7 +138,7 @@ export default function SurveyDetailsPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-4xl mx-auto space-y-8">
-        
+
         {/* Navigation Header */}
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -131,7 +158,7 @@ export default function SurveyDetailsPage() {
         {/* Link Generators (Only visible if UNIQUE_TOKENS policy is active) */}
         {survey?.restrictionPolicy === "UNIQUE_TOKENS" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             {/* Single Link Generator */}
             <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between space-y-4 shadow-lg">
               <div>
@@ -180,6 +207,13 @@ export default function SurveyDetailsPage() {
             Note: Unique link generation is only available when the survey restriction policy is set to <strong>UNIQUE_TOKENS</strong>.
           </div>
         )}
+
+        <button
+          onClick={handleExportCsv}
+          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-xl transition flex items-center gap-2 border border-slate-700/80 shadow-md cursor-pointer"
+        >
+          <Download className="w-4 h-4 text-emerald-400" /> Export Responses (CSV)
+        </button>
 
         {/* Generated Links Management Table */}
         {survey?.restrictionPolicy === "UNIQUE_TOKENS" && (

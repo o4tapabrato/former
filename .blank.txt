@@ -1,28 +1,23 @@
+// app/api/surveys/[id]/export/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/session"; // or your auth check helper
+import { generateSurveyCsv } from "@/lib/export";
 
-export async function POST(
+export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
     const resolvedParams = await params;
-    const surveyId = resolvedParams?.id;
+    const csvString = await generateSurveyCsv(resolvedParams.id);
 
-    // Optional: Verify survey ownership or authentication here
-
-    // Create a new unique token record
-    const newToken = await db.surveyToken.create({
-      data: {
-        surveyId,
-        isUsed: false,
+    return new NextResponse(csvString, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="survey-${resolvedParams.id}-responses.csv"`,
       },
     });
-
-    return NextResponse.json({ success: true, data: newToken }, { status: 201 });
   } catch (error: any) {
-    console.error("Token generation error:", error);
-    return NextResponse.json({ error: "Failed to generate token" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Export failed" }, { status: 500 });
   }
 }
