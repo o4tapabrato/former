@@ -22,13 +22,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         }
 
         const csvString = await getSurveyCsv(surveyId);
-        return NextResponse.json(
-            csvString,
-            { status: 200, headers: {
-                "Constent-Type": "text/csv; charset=utf-8",
+        return new NextResponse(csvString, { 
+            status: 200,
+            headers: {
+                "Content-Type": "text/csv; charset=utf-8",
                 "Content-Disposition": `attachment; filename="survey-${surveyId}-responses.csv"`
-            }}
-        )
+            }
+         })
     }
     catch(error: any) {
          return NextResponse.json(
