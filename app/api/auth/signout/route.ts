@@ -1,11 +1,10 @@
 import { destroySession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-export async function GET(request) {
+export async function GET(request: Request) {
     try {
         await destroySession();
-    }
-    catch (error) {
+    } catch (error) {
         console.log(error);
         return NextResponse.json(
             { error: "Internal server error !!!" },
